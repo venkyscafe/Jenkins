@@ -1,0 +1,27 @@
+pipeline {
+    agent {
+        label 'agent_02'
+    }
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building the Application'
+//              sh 'rmdir dir_03 dir_04'
+                sh 'mkdir dir_01 dir_02'
+//              sh 'cp -rf /opt/jenkins/workspace/Jenkins_Agent_02_Testing_Project/* /opt/jenkins/workspace/Jenkins_Agent_01_Testing_Project/'
+            }
+        }
+        
+        stage('Test'){
+            steps {
+                echo 'Running Tests...... '
+            }
+        }
+        
+        stage('Deploy'){
+            steps {
+                echo 'Deploying the application'
+            }
+        }
+    }
+}
