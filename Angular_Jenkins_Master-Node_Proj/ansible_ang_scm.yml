@@ -1,0 +1,88 @@
+---
+- name: Setup Development Environment
+  hosts: all
+  become: yes  # Run tasks with sudo privileges
+
+  tasks:
+    - name: Update package list
+      apt:
+        update_cache: yes
+
+    - name: Install required dependencies
+      apt:
+        name:
+          - vim
+          - openssh-server
+          - openjdk-17-jre
+          - nginx
+          - curl
+          - git
+        state: present
+
+    - name: Install Node.js (22.14.0)
+      shell: |
+        curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+        apt install -y nodejs
+        node -v
+
+    - name: Install specific npm version (10.9.2)
+      shell: npm install -g npm@10.9.2
+
+    - name: Install Angular CLI (16.2.16)
+      shell: npm install -g @angular/cli@16.2.16
+
+    - name: Create Jenkins folder in /opt directory
+      file:
+        path: /opt/jenkins
+        state: directory
+        mode: '0755'
+
+    - name: Configure SSH to allow root login
+      replace:
+        path: /etc/ssh/sshd_config
+        regexp: '^#PermitRootLogin prohibit-password'
+        replace: 'PermitRootLogin yes'
+
+    - name: Set root password
+      shell: echo "root:password" | chpasswd
+
+    - name: Ensure SSH runs on shell startup
+      lineinfile:
+        path: /root/.bashrc
+        line: "/usr/sbin/sshd"
+
+    - name: Configure Nginx to prevent daemon mode
+      lineinfile:
+        path: /etc/nginx/nginx.conf
+        line: "daemon off;"
+
+    - name: Generate SSH key for root user
+      command: ssh-keygen -t rsa -b 4096 -f /root/.ssh/id_rsa -N ""
+
+    - name: Copy generated public key to authorized_keys
+      shell: cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+
+    - name: Set correct permissions on SSH key files
+      file:
+        path: "/root/.ssh/{{ item }}"
+        mode: '0600'
+      loop:
+        - id_rsa
+        - authorized_keys
+
+    - name: Restart SSH and Nginx services
+      service:
+        name: "{{ item }}"
+        state: restarted
+      loop:
+        - ssh
+        - nginx
+
+    - name: Enable SSH and Nginx services to start on boot
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+      loop:
+        - ssh
+        - nginx
+

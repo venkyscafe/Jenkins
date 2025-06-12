@@ -10,7 +10,8 @@ RUN apt update && apt install -y \
     openssh-server \
     openjdk-17-jre \
     nginx \
-    curl
+    curl \
+    git  # Adding Git installation
 
 # Install Node.js (22.14.0)
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
@@ -22,6 +23,9 @@ RUN npm install -g npm@10.9.2 && npm -v
 
 # Install Angular CLI (16.2.16)
 RUN npm install -g @angular/cli@16.2.16 && ng version
+
+# Create Jenkins folder in /opt directory
+RUN mkdir -p /opt/jenkins
 
 # Configure SSH
 RUN mkdir -p /var/run/sshd && \
